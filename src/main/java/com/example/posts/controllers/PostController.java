@@ -3,6 +3,8 @@ package com.example.posts.controllers;
 import com.example.posts.dto.PostDTO;
 import com.example.posts.services.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,8 +18,8 @@ public class PostController {
     private PostService service;
 
     @GetMapping
-    public ResponseEntity<List<PostDTO>> findAll() {
-        List<PostDTO> result = service.findAll();
+    public ResponseEntity<Page<PostDTO>> findAll(Pageable pageable) {
+        Page<PostDTO> result = service.findAll(pageable);
         return ResponseEntity.ok().body(result);
     }
 
