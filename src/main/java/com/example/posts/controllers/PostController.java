@@ -39,6 +39,12 @@ public class PostController {
         return ResponseEntity.created(uri).body(response);
     }
 
+    @DeleteMapping(value = "/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping(value = "/{id}")
     public ResponseEntity<PostResponse> update(@PathVariable Long id ,@RequestBody PostRequest dto) {
         PostResponse response = service.update(id, dto);

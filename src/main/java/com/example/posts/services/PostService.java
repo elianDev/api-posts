@@ -49,6 +49,11 @@ public class PostService {
         return new PostResponse(entity.getId(), entity.getText(), entity.getPostDate(), 1L);
     }
 
+    @Transactional
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
     private PostResponse createDto(Post entity) {
         return new PostResponse(entity.getId(),
                 entity.getText(),
