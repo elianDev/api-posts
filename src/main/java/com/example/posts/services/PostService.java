@@ -1,6 +1,7 @@
 package com.example.posts.services;
 
-import com.example.posts.dto.PostDTO;
+import com.example.posts.dto.PostRequest;
+import com.example.posts.dto.PostResponse;
 import com.example.posts.entities.Post;
 import com.example.posts.repositories.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.time.Instant;
 
 @Service
 public class PostService {
@@ -18,15 +19,32 @@ public class PostService {
     private PostRepository repository;
 
     @Transactional(readOnly = true)
-    public Page<PostDTO> findAll(Pageable pageable) {
+    public Page<PostResponse> findAll(Pageable pageable) {
         Page<Post> result = repository.findAll(pageable);
-        return result.map(x -> new PostDTO(x.getId(), x.getText(), x.getPostDate(), x.getUser().getId()));
+        return result.map(x -> createDto(x));
     }
 
     @Transactional(readOnly = true)
-    public PostDTO findById(Long id) {
+    public PostResponse findById(Long id) {
         Post post = repository.findById(id).get();
-        PostDTO dto = new PostDTO(post.getId(), post.getText(), post.getPostDate(), post.getUser().getId());
+        PostResponse dto = createDto(post);
         return dto;
+    }
+
+    @Transactional(readOnly = false)
+    public PostResponse insert(PostRequest dto) {
+        Post entity = new Post();
+        entity.setText(dto.text());
+        entity.setPostDate(Instant.now());
+
+        entity = repository.save(entity);
+        return new PostResponse(entity.getId(), entity.getText(), entity.getPostDate(), 1L);
+    }
+
+    private PostResponse createDto(Post entity) {
+        return new PostResponse(entity.getId(),
+                entity.getText(),
+                entity.getPostDate(),
+                entity.getUser().getId());
     }
 }
