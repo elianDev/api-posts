@@ -31,12 +31,20 @@ public class PostService {
         return dto;
     }
 
-    @Transactional(readOnly = false)
+    @Transactional
     public PostResponse insert(PostRequest dto) {
         Post entity = new Post();
         entity.setText(dto.text());
         entity.setPostDate(Instant.now());
 
+        entity = repository.save(entity);
+        return new PostResponse(entity.getId(), entity.getText(), entity.getPostDate(), 1L);
+    }
+
+    @Transactional
+    public PostResponse update(Long id, PostRequest dto) {
+        Post entity = repository.getReferenceById(id);
+        entity.setText(dto.text());
         entity = repository.save(entity);
         return new PostResponse(entity.getId(), entity.getText(), entity.getPostDate(), 1L);
     }

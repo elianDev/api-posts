@@ -8,6 +8,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping(value = "/posts")
@@ -31,6 +34,14 @@ public class PostController {
     @PostMapping
     public ResponseEntity<PostResponse> insert(@RequestBody PostRequest dto) {
         PostResponse response = service.insert(dto);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("{id}")
+                .buildAndExpand(response.id()).toUri();
+        return ResponseEntity.created(uri).body(response);
+    }
+
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<PostResponse> update(@PathVariable Long id ,@RequestBody PostRequest dto) {
+        PostResponse response = service.update(id, dto);
         return ResponseEntity.ok().body(response);
     }
 }
