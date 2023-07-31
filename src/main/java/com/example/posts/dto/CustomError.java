@@ -1,6 +1,16 @@
 package com.example.posts.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.time.Instant;
 
-public record CustomError(Instant timestamp, Integer status, String error, String path) {
+@AllArgsConstructor
+@Getter
+public class CustomError {
+    private Instant timestamp;
+    private Integer status;
+    private String error;
+    private String path;
+
 }

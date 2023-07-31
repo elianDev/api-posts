@@ -3,6 +3,7 @@ package com.example.posts.controllers;
 import com.example.posts.dto.PostRequest;
 import com.example.posts.dto.PostResponse;
 import com.example.posts.services.PostService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +33,7 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostResponse> insert(@RequestBody PostRequest dto) {
+    public ResponseEntity<PostResponse> insert(@Valid @RequestBody PostRequest dto) {
         PostResponse response = service.insert(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("{id}")
                 .buildAndExpand(response.id()).toUri();
@@ -46,7 +47,7 @@ public class PostController {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<PostResponse> update(@PathVariable Long id ,@RequestBody PostRequest dto) {
+    public ResponseEntity<PostResponse> update(@PathVariable Long id ,@Valid @RequestBody PostRequest dto) {
         PostResponse response = service.update(id, dto);
         return ResponseEntity.ok().body(response);
     }
