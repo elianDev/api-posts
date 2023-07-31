@@ -2,19 +2,24 @@ package com.example.posts.services;
 
 import com.example.posts.dto.UserRequest;
 import com.example.posts.dto.UserResponse;
+import com.example.posts.entities.Role;
 import com.example.posts.entities.User;
+import com.example.posts.projections.UserDetailsProjection;
 import com.example.posts.repositories.UserRepository;
 import com.example.posts.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository repository;
@@ -66,5 +71,20 @@ public class UserService {
 
     private UserResponse createDto(User entity) {
         return new UserResponse(entity.getId(),entity.getName(), entity.getEmail());
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        List<UserDetailsProjection> result = repository.searchUserAndRolesByEmail(username);
+        if(result.size() == 0) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        User user = new User();
+        user.setEmail(username);
+        user.setPassword(result.get(0).getPassword());
+        for (UserDetailsProjection projection: result) {
+            user.addRole(new Role(projection.getRoleId(), projection.getAuthority()));
+        }
+        return user;
     }
 }
