@@ -3,7 +3,6 @@ package com.example.posts.services;
 import com.example.posts.dto.PostRequest;
 import com.example.posts.dto.PostResponse;
 import com.example.posts.entities.Post;
-import com.example.posts.entities.User;
 import com.example.posts.repositories.PostRepository;
 import com.example.posts.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
