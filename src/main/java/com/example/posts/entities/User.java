@@ -1,5 +1,6 @@
 package com.example.posts.entities;
 
+import com.example.posts.dto.UserDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

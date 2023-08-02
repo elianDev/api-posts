@@ -27,12 +27,14 @@ public class UserController {
         return ResponseEntity.ok(dto);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @GetMapping(value = "/{id}")
     public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
         UserResponse result = service.findById(id);
         return ResponseEntity.ok().body(result);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PostMapping
     public ResponseEntity<UserResponse> insert(@Valid @RequestBody UserRequest dto) {
         UserResponse response = service.insert(dto);
@@ -41,12 +43,14 @@ public class UserController {
         return ResponseEntity.created(uri).body(response);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
     @PutMapping(value = "/{id}")
     public ResponseEntity<UserResponse> update(@PathVariable Long id ,@Valid @RequestBody UserRequest dto) {
         UserResponse response = service.update(id, dto);

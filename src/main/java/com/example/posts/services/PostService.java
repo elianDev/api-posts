@@ -2,7 +2,9 @@ package com.example.posts.services;
 
 import com.example.posts.dto.PostRequest;
 import com.example.posts.dto.PostResponse;
+import com.example.posts.dto.UserDTO;
 import com.example.posts.entities.Post;
+import com.example.posts.entities.User;
 import com.example.posts.repositories.PostRepository;
 import com.example.posts.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +19,9 @@ import java.util.NoSuchElementException;
 
 @Service
 public class PostService {
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private PostRepository repository;
@@ -37,21 +42,30 @@ public class PostService {
 
     @Transactional
     public PostResponse insert(PostRequest dto) {
+        UserDTO userDto = userService.getMe();
+        User user = new User();
+        user.setId(userDto.getId());
+        user.setName(userDto.getName());
         Post entity = new Post();
         entity.setText(dto.text());
         entity.setPostDate(Instant.now());
+        entity.setUser(user);
 
         entity = repository.save(entity);
-        return new PostResponse(entity.getId(), entity.getText(), entity.getPostDate(), 1L);
+        return new PostResponse(entity.getId(), entity.getText(), entity.getPostDate(), entity.getUser().getId());
     }
 
     @Transactional
     public PostResponse update(Long id, PostRequest dto) {
         try {
             Post entity = repository.getReferenceById(id);
-            entity.setText(dto.text());
-            entity = repository.save(entity);
-            return new PostResponse(entity.getId(), entity.getText(), entity.getPostDate(), 1L);
+            if (entity.getUser().getId() != userService.getMe().getId()) {
+                throw new ResourceNotFoundException("User not allowed");
+            } else {
+                entity.setText(dto.text());
+                entity = repository.save(entity);
+                return new PostResponse(entity.getId(), entity.getText(), entity.getPostDate(), entity.getUser().getId());
+            }
         } catch (EntityNotFoundException e) {
             throw new ResourceNotFoundException("Resource not found");
         }
@@ -62,7 +76,9 @@ public class PostService {
     public void delete(Long id) {
         try {
             Post post = repository.findById(id).get();
-            repository.delete(post);
+            if(post.getUser().getId() != userService.getMe().getId()) {
+                throw new ResourceNotFoundException("User not allowed");
+            } else repository.delete(post);
         } catch (NoSuchElementException e) {
             throw new ResourceNotFoundException("Resource not found");
         }

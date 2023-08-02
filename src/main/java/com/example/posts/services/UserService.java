@@ -52,11 +52,14 @@ public class UserService implements UserDetailsService {
     public UserResponse update(Long id, UserRequest dto) {
         try {
             User entity = repository.getReferenceById(id);
-            entity.setName(dto.name());
-            entity.setEmail(dto.email());
-            entity.setPassword(dto.password());
-            entity = repository.save(entity);
-            return new UserResponse(entity.getId(), entity.getName(), entity.getEmail());
+            if(entity.getId() == authenticated().getId()) {
+                entity.setName(dto.name());
+                entity.setEmail(dto.email());
+                entity.setPassword(dto.password());
+                entity = repository.save(entity);
+                return new UserResponse(entity.getId(), entity.getName(), entity.getEmail());
+            }
+            else throw new ResourceNotFoundException("User not allowed");
         } catch (EntityNotFoundException e) {
             throw new ResourceNotFoundException("Resource not found");
         }
@@ -67,7 +70,7 @@ public class UserService implements UserDetailsService {
     public void delete(Long id) {
         try {
             User user = repository.findById(id).get();
-            repository.delete(user);
+            if(authenticated().getId() == user.getId()) repository.delete(user);
         } catch (NoSuchElementException e) {
             throw new ResourceNotFoundException("Resource not found");
         }
