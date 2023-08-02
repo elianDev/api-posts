@@ -1,11 +1,13 @@
 package com.example.posts.controllers;
 
+import com.example.posts.dto.UserDTO;
 import com.example.posts.dto.UserRequest;
 import com.example.posts.dto.UserResponse;
 import com.example.posts.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -17,6 +19,13 @@ public class UserController {
 
     @Autowired
     private UserService service;
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @GetMapping(value = "/me")
+    public ResponseEntity<UserDTO> findMe() {
+        UserDTO dto = service.getMe();
+        return ResponseEntity.ok(dto);
+    }
 
     @GetMapping(value = "/{id}")
     public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
