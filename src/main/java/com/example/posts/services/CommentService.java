@@ -1,10 +1,12 @@
 package com.example.posts.services;
 
-import com.example.posts.dto.PostRequest;
-import com.example.posts.dto.PostResponse;
+import com.example.posts.dto.CommentRequest;
+import com.example.posts.dto.CommentResponse;
 import com.example.posts.dto.UserDTO;
+import com.example.posts.entities.Comment;
 import com.example.posts.entities.Post;
 import com.example.posts.entities.User;
+import com.example.posts.repositories.CommentRepository;
 import com.example.posts.repositories.PostRepository;
 import com.example.posts.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,53 +20,63 @@ import java.time.Instant;
 import java.util.NoSuchElementException;
 
 @Service
-public class PostService {
+public class CommentService {
 
     @Autowired
     private UserService userService;
 
     @Autowired
-    private PostRepository repository;
+    private PostRepository postRepository;
+
+    @Autowired
+    private CommentRepository repository;
 
     @Transactional(readOnly = true)
-    public Page<PostResponse> findAll(Pageable pageable) {
-        Page<Post> result = repository.findAll(pageable);
+    public Page<CommentResponse> findAll(Pageable pageable) {
+        Page<Comment> result = repository.findAll(pageable);
         return result.map(x -> createDto(x));
     }
 
     @Transactional(readOnly = true)
-    public PostResponse findById(Long id) {
-        Post post = repository.findById(id).orElseThrow(
+    public CommentResponse findById(Long id) {
+        Comment Comment = repository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Resource not found"));
-        PostResponse dto = createDto(post);
+        CommentResponse dto = createDto(Comment);
         return dto;
     }
 
     @Transactional
-    public PostResponse insert(PostRequest dto) {
+    public CommentResponse insert(CommentRequest dto) {
         UserDTO userDto = userService.getMe();
         User user = new User();
         user.setId(userDto.getId());
         user.setName(userDto.getName());
-        Post entity = new Post();
+        Post post = postRepository.findById(dto.postId())
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        Comment entity = new Comment();
         entity.setText(dto.text());
         entity.setCreatedAt(Instant.now());
         entity.setUser(user);
+        entity.setPost(post);
 
         entity = repository.save(entity);
-        return new PostResponse(entity.getId(), entity.getText(), entity.getCreatedAt(), entity.getUser().getId());
+        return createDto(entity);
     }
 
     @Transactional
-    public PostResponse update(Long id, PostRequest dto) {
+    public CommentResponse update(Long id, CommentRequest dto) {
         try {
-            Post entity = repository.getReferenceById(id);
+            Comment entity = repository.getReferenceById(id);
             if (entity.getUser().getId() != userService.getMe().getId()) {
                 throw new ResourceNotFoundException("User not allowed");
             } else {
                 entity.setText(dto.text());
+                Post post = postRepository.findById(dto.postId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+
+                entity.setPost(post);
                 entity = repository.save(entity);
-                return new PostResponse(entity.getId(), entity.getText(), entity.getCreatedAt(), entity.getUser().getId());
+                return createDto(entity);
             }
         } catch (EntityNotFoundException e) {
             throw new ResourceNotFoundException("Resource not found");
@@ -75,19 +87,20 @@ public class PostService {
     @Transactional
     public void delete(Long id) {
         try {
-            Post post = repository.findById(id).get();
-            if(post.getUser().getId() != userService.getMe().getId()) {
+            Comment Comment = repository.findById(id).get();
+            if(Comment.getUser().getId() != userService.getMe().getId()) {
                 throw new ResourceNotFoundException("User not allowed");
-            } else repository.delete(post);
+            } else repository.delete(Comment);
         } catch (NoSuchElementException e) {
             throw new ResourceNotFoundException("Resource not found");
         }
     }
 
-    private PostResponse createDto(Post entity) {
-        return new PostResponse(entity.getId(),
+    private CommentResponse createDto(Comment entity) {
+        return new CommentResponse(entity.getId(),
                 entity.getText(),
                 entity.getCreatedAt(),
-                entity.getUser().getId());
+                entity.getUser().getId(),
+                entity.getPost().getId());
     }
 }

@@ -6,6 +6,7 @@ import com.example.posts.dto.UserResponse;
 import com.example.posts.entities.Role;
 import com.example.posts.entities.User;
 import com.example.posts.projections.UserDetailsProjection;
+import com.example.posts.repositories.RoleRepository;
 import com.example.posts.repositories.UserRepository;
 import com.example.posts.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
@@ -15,6 +16,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,9 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository repository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Transactional(readOnly = true)
     public UserResponse findById(Long id) {
@@ -42,7 +48,11 @@ public class UserService implements UserDetailsService {
         User entity = new User();
         entity.setName(dto.name());
         entity.setEmail(dto.email());
-        entity.setPassword(dto.password());
+        String encryptedPassword = new BCryptPasswordEncoder().encode(dto.password());
+        entity.setPassword(encryptedPassword);
+
+        Role role = roleRepository.findByAuthority("ROLE_USER"); // Assumindo que "ROLE_USER" é o papel padrão para novos usuários
+        entity.addRole(role);
 
         entity = repository.save(entity);
         return createDto(entity);
